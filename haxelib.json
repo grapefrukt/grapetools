@@ -1,0 +1,11 @@
+{
+  "name": "grapetools",
+  "url": "http://github.com/grapefrukt/grapetools",
+  "license": "MIT",
+  "tags": [ "flash", "cpp", "neko", "js" ],
+  "description": "grapetools is a collection of utilities I use across my projects",
+  "version": "0.0.1",
+  "releasenote": "First release",
+  "contributors": [ "grapefrukt" ],
+  "dependencies": {}
+}
