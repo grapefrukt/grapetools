@@ -1,7 +1,5 @@
 package com.grapefrukt.utils;
-import com.grapefrukt.games.versus.Settings;
-import com.grapefrukt.utils.events.CooldownEvent;
-import nme.events.EventDispatcher;
+import flash.events.EventDispatcher;
 
 /**
  * ...
@@ -24,7 +22,18 @@ class Cooldown extends EventDispatcher {
 	 */
 	public var autoReset:Bool;
 	
-	public var isCompleted(get_isCompleted, never):Bool;
+	public var isCompleted(get, never):Bool;
+	
+	/**
+	 * Gets the progress of the cooldown
+	 * @return 1 is completed, 0 is not started
+	 */
+	public var ratio(get, never):Float;
+	
+	/**
+	 * @return 0 is completed, 1 is not started
+	 */
+	public var ratioInverse(get, never):Float;
 	
 	private var _onComplete:Void->Void;
 	
@@ -37,9 +46,8 @@ class Cooldown extends EventDispatcher {
 	}
 	
 	public function update(timeDelta:Float):Void {
-		timeDelta /= Settings.FPS;
 		if (cooldown > 0 && cooldown - timeDelta <= 0) {
-			dispatchEvent(new CooldownEvent(CooldownEvent.COMPLETE, this));
+			//dispatchEvent(new CooldownEvent(CooldownEvent.COMPLETE, this));
 			if (_onComplete != null) _onComplete();
 			if (autoReset) reset();
 		}
@@ -52,7 +60,7 @@ class Cooldown extends EventDispatcher {
 	public function reset(newDuration:Float = -1) {
 		if (newDuration >= 0) duration = newDuration;
 		cooldown = duration;
-		dispatchEvent(new CooldownEvent(CooldownEvent.RESET, this));
+		//dispatchEvent(new CooldownEvent(CooldownEvent.RESET, this));
 	}
 	
 	/**
@@ -63,23 +71,16 @@ class Cooldown extends EventDispatcher {
 		update(.1);
 	}
 	
-	/**
-	 * Gets the progress of the cooldown
-	 * @return 0 is completed, 1 is not started
-	 */
-	public function getProgress():Float {
-		if (cooldown <= 0) return 0;
-		return cooldown / duration;
+	private function get_ratio():Float {
+		if (cooldown <= 0) return 1;
+		return 1 - cooldown / duration;
 	}
 	
-	/**
-	 * @return 1 is completed, 0 is not started
-	 */
-	public function getProgressReverse():Float {
-		return 1 - getProgress();
+	private function get_ratioInverse():Float {
+		return 1 - get_ratio();
 	}
 	
 	private function get_isCompleted() {
-		return getProgress() == 0;
+		return get_ratio() >= 1;
 	}
 }
