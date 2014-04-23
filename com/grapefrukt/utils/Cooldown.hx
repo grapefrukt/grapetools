@@ -28,7 +28,7 @@ class Cooldown extends EventDispatcher {
 	 * Gets the progress of the cooldown
 	 * @return 1 is completed, 0 is not started
 	 */
-	public var ratio(get, never):Float;
+	public var ratio(get, set):Float;
 	
 	/**
 	 * @return 0 is completed, 1 is not started
@@ -74,6 +74,15 @@ class Cooldown extends EventDispatcher {
 	private function get_ratio():Float {
 		if (cooldown <= 0) return 1;
 		return 1 - cooldown / duration;
+	}
+	
+	private function set_ratio(value:Float):Float {
+		if (value > 1) value = 1;
+		if (value < 0) value = 0;
+		cooldown = duration * (1 - value);
+		if (value == 1) complete;
+		
+		return get_ratio();
 	}
 	
 	private function get_ratioInverse():Float {
