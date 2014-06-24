@@ -9,9 +9,11 @@ class Perf {
 	
 	private static var categories:Map<String, Category>;
 	public static var numEntries(default, null):Int;
+	public static var total:Category;
 	
-	public static function init(numEntries:Int = 100) {
+	public static function init(numEntries:Int = 17 * 60) {
 		Perf.numEntries = numEntries;
+		total = new Category();
 		categories = new Map();
 	}
 	
@@ -25,6 +27,11 @@ class Perf {
 	
 	public static function getAverage(name:String) {
 		return get(name).getAverage();
+	}
+	
+	static public function tick() {
+		total.end();
+		total.begin();
 	}
 	
 	private inline static function get(name):Category {

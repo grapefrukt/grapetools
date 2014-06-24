@@ -1,6 +1,7 @@
 package com.grapefrukt.utils;
 import openfl.display.Shape;
 import openfl.events.Event;
+import openfl.system.System;
 
 /**
  * ...
@@ -11,8 +12,11 @@ class PerfRender extends Shape {
 	private var categories:Array<String>;
 	private var colors:Array<Int>;
 	private var pixelsPerMS:Float;
+	private var pixelsPerByte:Float = .00005;
 	private var targetFrameTime:Float = 16.667;
 	private var barHeight:Float = 8;
+	
+	private var maxMem:Int = 0;
 
 	public function new(categories:Array<String>, pixelsPerMS:Float = 50, ?colors:Array<Int>) {
 		super();
@@ -21,7 +25,7 @@ class PerfRender extends Shape {
 		this.colors = colors;
 		
 		if (this.colors == null) {
-			this.colors = [0x75b8e5, 0x7f1345, 0xe8d93e, 0x2b1682];
+			this.colors = [0xf9fcfc, 0xf68634, 0xf6ea34, 0xf60b73, 0x38cfda];
 		}
 		
 		addEventListener(Event.ENTER_FRAME, handleEnterFrame);
@@ -29,11 +33,15 @@ class PerfRender extends Shape {
 	
 	private function handleEnterFrame(e:Event):Void {
 		graphics.clear();
+		
+		graphics.beginFill(colors[0]);
+		graphics.drawRect(0, 0, Perf.total.getAverage() * pixelsPerMS, barHeight);
+		
 		var lastX = 0.0;
 		var i = 0;
 		for (category in categories) {
 			var avg = Perf.getAverage(category);
-			graphics.beginFill(colors[i % (colors.length)]);
+			graphics.beginFill(colors[(i + 1) % (colors.length)]);
 			graphics.drawRect(lastX, 0, avg * pixelsPerMS, barHeight);
 			lastX += avg * pixelsPerMS;
 			
@@ -41,7 +49,15 @@ class PerfRender extends Shape {
 		}
 		
 		graphics.beginFill(0);
-		graphics.drawRect(Std.int(pixelsPerMS * targetFrameTime - 1), 0, 2, barHeight + 2);
+		graphics.drawRect(Std.int(pixelsPerMS * targetFrameTime - 1), -2, 2, barHeight + 4);
+	
+		if (System.totalMemory > maxMem) maxMem = System.totalMemory;
+		
+		graphics.beginFill(colors[4]);
+		graphics.drawRect(0, barHeight, System.totalMemory * pixelsPerByte, barHeight);
+		
+		graphics.beginFill(0);
+		graphics.drawRect(Std.int(maxMem * pixelsPerByte - 1), barHeight - 2, 2, barHeight + 4);
 	}
 	
 }
