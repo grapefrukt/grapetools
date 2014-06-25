@@ -11,7 +11,7 @@ class Perf {
 	public static var numEntries(default, null):Int;
 	public static var total:Category;
 	
-	public static function init(numEntries:Int = 17 * 60) {
+	public static function init(numEntries:Int = 60) {
 		Perf.numEntries = numEntries;
 		total = new Category();
 		categories = new Map();
@@ -45,10 +45,10 @@ class Perf {
 }
 
 private class Category {
-	public var sum:Float = 0;
-	public var entries:Array<Float>;
+	public var sum:Int = 0;
+	public var entries:Array<Int>;
 	public var index:Int;
-	public var began:Float = 0;
+	public var began:Int = 0;
 	
 	public function new() {
 		entries = [];
@@ -72,6 +72,6 @@ private class Category {
 	}
 	
 	public function getAverage() {
-		return (sum / Perf.numEntries);
+		return sum / ((index < Perf.numEntries) ? index : Perf.numEntries);
 	}
 }

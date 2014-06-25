@@ -13,7 +13,7 @@ class PerfRender extends Shape {
 	private var colors:Array<Int>;
 	private var pixelsPerMS:Float;
 	private var pixelsPerByte:Float = .00005;
-	private var targetFrameTime:Float = 16.667;
+	private var targetFrameTime:Float = 1000 / 60;
 	private var barHeight:Float = 8;
 	
 	private var maxMem:Int = 0;
