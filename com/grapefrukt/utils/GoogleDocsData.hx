@@ -1,4 +1,5 @@
 package com.grapefrukt.utils;
+import haxe.Timer;
 import openfl.events.Event;
 import openfl.net.URLLoader;
 import openfl.net.URLRequest;
@@ -13,32 +14,44 @@ import sys.io.File;
 
 	private var documentId:String;
 	private var labels:Array<String>;
-	private var data:Array<T>;
+	public var data(default, null):Array<T>;
 	private var remotePath(get, never):String;
 	private var localPath(get, never):String;
 	
-	public function new(documentId:String) {
+	private var onComplete:Void->Void;
+	
+	public function new(documentId:String, onComplete:Void->Void) {
 		this.documentId = documentId;
+		this.onComplete = onComplete;
 		
-		reload(true);
-		reload(false);
+		// a delay is needed here because local files load immediately with openfl leaving no time to setup other stuff
+		Timer.delay(loadCached, 10);
+		loadRemote();
 	}
 	
-	public function reload(local:Bool = false) {
+	private function loadCached() {
 		var loader = new URLLoader();
-		loader.addEventListener(Event.COMPLETE, local ? handleLoadLocalComplete : handleLoadRemoteComplete);
-		loader.load(new URLRequest(local ? localPath : remotePath));
+		loader.addEventListener(Event.COMPLETE, handleLoadLocalComplete);
+		loader.load(new URLRequest(localPath));
+	}
+	
+	public function loadRemote() {
+		var loader = new URLLoader();
+		loader.addEventListener(Event.COMPLETE, handleLoadRemoteComplete);
+		loader.load(new URLRequest(remotePath));
 	}
 	
 	private function handleLoadLocalComplete(e:Event):Void {
 		var loader:URLLoader = cast e.target;
 		parse(loader.data, true);
+		onComplete();
 	}
 	
 	private function handleLoadRemoteComplete(e:Event):Void {
 		var loader:URLLoader = cast e.target;
 		parse(loader.data, false);
-		cache(loader.data);
+		//cache(loader.data);
+		onComplete();
 	}
 	
 	private function cache(csv:String) {
@@ -60,7 +73,11 @@ import sys.io.File;
 			} else {
 				var instance = new T();
 				for (i in 0 ... cols.length) {
-					Reflect.setProperty(instance, labels[i], cols[i]);
+					try {
+						Reflect.setProperty(instance, labels[i], cols[i]);
+					} catch (e:Dynamic) {
+						trace('ERROR: failed to set field: ' + labels[i] + ' on ' + instance);
+					}
 				}
 				data.push(instance);
 			}
