@@ -1,5 +1,5 @@
 ﻿/**
- * @autor Martin Jonasson
+ * @author Martin Jonasson
  * @author Joshua Granick
  * @author Zeh Fernando, Nate Chatellier
  * @author Robert Penner / http://www.robertpenner.com/easing_terms_of_use.html
