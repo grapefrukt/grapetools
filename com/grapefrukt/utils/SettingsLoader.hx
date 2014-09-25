@@ -128,7 +128,11 @@ class SettingsLoader extends EventDispatcher {
 		}
 	}
 	
-	private function setValue(name:String, value:Dynamic):Void {
+	public function listKeys():Array<String> {
+		return null;
+	}
+	
+	public function setValue(name:String, value:Dynamic) {
 		if (!Reflect.hasField(target, name)) {
 			trace("Can't set value: " + name + ". No such value exists");
 			return;
@@ -142,6 +146,10 @@ class SettingsLoader extends EventDispatcher {
 			Reflect.setField(target, name, value);
 			//if (Std.parseInt(value) != Reflect.field(target, name) && Std.parseFloat(value) != Reflect.field(target, name)) throw new Error("Failed setting value! " + name + ". Tried setting: " + value + " is actually: " + Reflect.field(target, name));
 		}
+	}
+	
+	public function getValue(key:String):Dynamic {
+		return Reflect.getProperty(target, key);
 	}
 
 }
