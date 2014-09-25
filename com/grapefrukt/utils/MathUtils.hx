@@ -17,4 +17,10 @@ class MathUtils {
 		return from + change * progress;
 	}
 	
+	public static function clamp(value:Float, max:Float = 1, min:Float = 0) {
+		if (value > max) return max;
+		if (value < min) return min;
+		return value;
+	}
+	
 }
