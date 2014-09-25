@@ -1,10 +1,15 @@
 package com.grapefrukt.utils;
+import haxe.crypto.Md5;
 import haxe.Timer;
 import openfl.events.Event;
+import openfl.events.IOErrorEvent;
+import openfl.net.SharedObject;
 import openfl.net.URLLoader;
 import openfl.net.URLRequest;
+#if cpp
 import sys.FileSystem;
 import sys.io.File;
+#end
 
 /**
  * ...
@@ -12,14 +17,21 @@ import sys.io.File;
  */
 @:generic class GoogleDocsData<T:{ function new():Void; }> {
 
-	private var documentId:String;
-	private var labels:Array<String>;
 	public var data(default, null):Array<T>;
-	private var remotePath(get, never):String;
-	private var localPath(get, never):String;
 	
-	private var onComplete:Void->Void;
+	var documentId:String;
+	var hash:String;
+	var labels:Array<String>;
+	var remotePath(get, never):String;
+	var localPath(get, never):String;
+	var onComplete:Void->Void;
 	
+	var ignoredFields:Map<String, Bool>;
+	/**
+	 * Loads data from a Google Docs spreadsheet. The document needs to be Shared so that "Anyone with the link" can see. 
+	 * @param	documentId	The unique identifier for the document. https://docs.google.com/spreadsheets/d/{THIS_PART}/edit?usp=sharing
+	 * @param	onComplete	A function to call when load is complete, may be called twice, one for the local cache and again for the remote
+	 */
 	public function new(documentId:String, onComplete:Void->Void) {
 		this.documentId = documentId;
 		this.onComplete = onComplete;
@@ -29,10 +41,26 @@ import sys.io.File;
 		loadRemote();
 	}
 	
-	private function loadCached() {
-		var loader = new URLLoader();
-		loader.addEventListener(Event.COMPLETE, handleLoadLocalComplete);
-		loader.load(new URLRequest(localPath));
+	/**
+	 * A list of field names to skip setting on the target class
+	 * @param	names
+	 */
+	public function ignoreFields(names:Array<String>) {
+		ignoredFields = new Map();
+		for (field in names) ignoredFields.set(field, true);
+	}
+	
+	function loadCached() {
+		#if cpp
+			var loader = new URLLoader();
+			loader.addEventListener(Event.COMPLETE, handleLoadLocalComplete);
+			loader.load(new URLRequest(localPath));
+		#else 
+			var s = SharedObject.getLocal(documentId, '/');
+			if (s.data.data == null) return;
+			parse(s.data.data, true);
+			onComplete();
+		#end
 	}
 	
 	public function loadRemote() {
@@ -41,28 +69,42 @@ import sys.io.File;
 		loader.load(new URLRequest(remotePath));
 	}
 	
-	private function handleLoadLocalComplete(e:Event):Void {
+	function handleLoadLocalComplete(e:Event):Void {
 		var loader:URLLoader = cast e.target;
 		parse(loader.data, true);
 		onComplete();
 	}
 	
-	private function handleLoadRemoteComplete(e:Event):Void {
+	function handleLoadRemoteComplete(e:Event):Void {
 		var loader:URLLoader = cast e.target;
+		
+		if (loader.data.indexOf('<H1>Moved Temporarily</H1>') != -1) {
+			trace('ERROR: document loaded but has redirect. permissions are probably not set correctly (needs to be shared with public)');
+			return;
+		}
+		
+		// remote data was identical to local cache, bail
+		if (getHash(loader.data) == hash) return;
+		
 		parse(loader.data, false);
-		//cache(loader.data);
+		cache(loader.data);
 		onComplete();
 	}
 	
-	private function cache(csv:String) {
+	function cache(csv:String) {
 		#if cpp
 			if (!FileSystem.exists('cache')) FileSystem.createDirectory('cache');
 			File.write(localPath);
 			File.saveContent(localPath, csv);
+		#else 
+			var s = SharedObject.getLocal(documentId, '/');
+			s.setProperty('data', csv);
+			s.flush();			
 		#end
 	}
 	
-	private function parse(csv:String, local:Bool) {
+	function parse(csv:String, local:Bool) {
+		hash = getHash(csv);
 		labels = null;
 		data = [];
 		var rows = csv.split('\n');
@@ -73,6 +115,9 @@ import sys.io.File;
 			} else {
 				var instance = new T();
 				for (i in 0 ... cols.length) {
+					// if this is an ignored field, skip it
+					if (ignoredFields != null && ignoredFields.exists(labels[i])) continue;
+					
 					try {
 						Reflect.setProperty(instance, labels[i], cols[i]);
 					} catch (e:Dynamic) {
@@ -85,11 +130,15 @@ import sys.io.File;
 		trace('parsed ' + data.length + ' rows from ' + (local ? 'local filesystem' : 'google docs'));
 	}
 	
-	private function get_localPath():String {
+	function getHash(data:String) {
+		return Md5.encode(data);
+	}
+	
+	function get_localPath():String {
 		return 'cache/' + documentId + '.csv';
 	}
 	
-	private function get_remotePath():String {
+	function get_remotePath():String {
 		return 'https://docs.google.com/spreadsheets/d/' + documentId + '/export?format=csv&id=' + documentId + '&gid=0';
 	}
 }
