@@ -101,7 +101,7 @@ import sys.io.File;
 		}
 		
 		// remote data was identical to local cache, bail
-		if (getHash(loader.data) == hash) {
+		if (getHash(loader.data) == hash) return;
 		
 		parse(loader.data, false);
 		cache(loader.data);
