@@ -5,7 +5,7 @@ import flash.events.EventDispatcher;
  * ...
  * @author Martin Jonasson, m@grapefrukt.com
  */
-class Cooldown extends EventDispatcher {
+class Cooldown {
 
 	/**
 	 * The time it takes for the cooldown to trigger once reset
@@ -38,7 +38,7 @@ class Cooldown extends EventDispatcher {
 	private var _onComplete:Void->Void;
 	
 	public function new(duration:Float, autoReset:Bool = false, onComplete:Void->Void = null) {
-		super();
+		//super();
 		this.duration = duration;
 		this.cooldown = duration;
 		this.autoReset = autoReset;
