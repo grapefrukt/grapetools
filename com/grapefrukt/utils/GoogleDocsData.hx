@@ -1,6 +1,7 @@
 package com.grapefrukt.utils;
 import haxe.crypto.Md5;
 import haxe.Timer;
+import openfl.Assets;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
 import openfl.net.SharedObject;
@@ -20,6 +21,7 @@ import sys.io.File;
 	public var data(default, null):Array<T>;
 	
 	var documentId:String;
+	var gId:String;
 	var hash:String;
 	var labels:Array<String>;
 	var remotePath(get, never):String;
@@ -31,10 +33,12 @@ import sys.io.File;
 	 * Loads data from a Google Docs spreadsheet. The document needs to be Shared so that "Anyone with the link" can see. 
 	 * @param	documentId	The unique identifier for the document. https://docs.google.com/spreadsheets/d/{THIS_PART}/edit?usp=sharing
 	 * @param	onComplete	A function to call when load is complete, may be called twice, one for the local cache and again for the remote
+	 * @param	gId			The sheet id, the first sheet seems to always be 0, later ones have custom id's
 	 */
-	public function new(documentId:String, onComplete:Void->Void) {
+	public function new(documentId:String, onComplete:Void->Void, gId:String = "0") {
 		this.documentId = documentId;
 		this.onComplete = onComplete;
+		this.gId = gId;
 		
 		// a delay is needed here because local files load immediately with openfl leaving no time to setup other stuff
 		Timer.delay(loadCached, 10);
@@ -51,12 +55,12 @@ import sys.io.File;
 	}
 	
 	function loadCached() {
-		#if cpp
+		#if desktop
 			var loader = new URLLoader();
 			loader.addEventListener(Event.COMPLETE, handleLoadLocalComplete);
 			loader.load(new URLRequest(localPath));
 		#else 
-			var s = SharedObject.getLocal(documentId, '/');
+			var s = flash.net.SharedObject.getLocal(documentId, '/');
 			if (s.data.data == null) return;
 			parse(s.data.data, true);
 			onComplete();
@@ -64,18 +68,31 @@ import sys.io.File;
 	}
 	
 	public function loadRemote() {
-		var loader = new URLLoader();
-		loader.addEventListener(Event.COMPLETE, handleLoadRemoteComplete);
-		loader.load(new URLRequest(remotePath));
+		#if android
+			parse(Assets.getText('config/' + documentId + '.csv'), false);
+			onComplete();
+		#else
+			var loader = new URLLoader();
+			loader.addEventListener(Event.COMPLETE, handleLoadRemoteComplete);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, handleLoadRemoteError);
+			#if flash
+				loader.addEventListener(IOErrorEvent.NETWORK_ERROR, handleLoadRemoteError);
+			#end
+			loader.load(new URLRequest(remotePath));
+		#end
 	}
 	
-	function handleLoadLocalComplete(e:Event):Void {
+	function handleLoadRemoteError(e:Event) {
+		trace("ERROR: loading remote data failed");
+	}
+	
+	function handleLoadLocalComplete(e:Event) {
 		var loader:URLLoader = cast e.target;
 		parse(loader.data, true);
 		onComplete();
 	}
 	
-	function handleLoadRemoteComplete(e:Event):Void {
+	function handleLoadRemoteComplete(e:Event) {
 		var loader:URLLoader = cast e.target;
 		
 		if (loader.data.indexOf('<H1>Moved Temporarily</H1>') != -1) {
@@ -84,7 +101,7 @@ import sys.io.File;
 		}
 		
 		// remote data was identical to local cache, bail
-		if (getHash(loader.data) == hash) return;
+		if (getHash(loader.data) == hash) {
 		
 		parse(loader.data, false);
 		cache(loader.data);
@@ -92,10 +109,14 @@ import sys.io.File;
 	}
 	
 	function cache(csv:String) {
-		#if cpp
-			if (!FileSystem.exists('cache')) FileSystem.createDirectory('cache');
-			File.write(localPath);
-			File.saveContent(localPath, csv);
+		#if desktop
+			try {
+				if (!FileSystem.exists('cache')) FileSystem.createDirectory('cache');
+				File.write(localPath);
+				File.saveContent(localPath, csv);
+			} catch (e:Dynamic) {
+				trace("ERROR: failed to write file, permissions may be borked");
+			}
 		#else 
 			var s = SharedObject.getLocal(documentId, '/');
 			s.setProperty('data', csv);
@@ -119,7 +140,7 @@ import sys.io.File;
 					if (ignoredFields != null && ignoredFields.exists(labels[i])) continue;
 					
 					try {
-						Reflect.setProperty(instance, labels[i], cols[i]);
+						set(instance, labels[i], cols[i]);
 					} catch (e:Dynamic) {
 						trace('ERROR: failed to set field: ' + labels[i] + ' on ' + instance);
 					}
@@ -130,15 +151,19 @@ import sys.io.File;
 		trace('parsed ' + data.length + ' rows from ' + (local ? 'local filesystem' : 'google docs'));
 	}
 	
+	function set(instance:T, field:String, value:Dynamic) {
+		Reflect.setProperty(instance, field, value);
+	}
+	
 	function getHash(data:String) {
 		return Md5.encode(data);
 	}
 	
 	function get_localPath():String {
-		return 'cache/' + documentId + '.csv';
+		return 'cache/' + documentId + '-' + gId + '.csv';
 	}
 	
 	function get_remotePath():String {
-		return 'https://docs.google.com/spreadsheets/d/' + documentId + '/export?format=csv&id=' + documentId + '&gid=0';
+		return 'https://docs.google.com/spreadsheets/d/' + documentId + '/export?format=csv&id=' + documentId + '&gid=' + gId;
 	}
 }
