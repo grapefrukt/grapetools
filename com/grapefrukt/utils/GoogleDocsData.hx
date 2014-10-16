@@ -1,5 +1,4 @@
 package com.grapefrukt.utils;
-import haxe.crypto.Md5;
 import haxe.Timer;
 import openfl.Assets;
 import openfl.events.Event;
@@ -68,7 +67,7 @@ import sys.io.File;
 	}
 	
 	public function loadRemote() {
-		#if android
+		#if (android || flash)
 			parse(Assets.getText('config/' + documentId + '.csv'), false);
 			onComplete();
 		#else
@@ -156,7 +155,7 @@ import sys.io.File;
 	}
 	
 	function getHash(data:String) {
-		return Md5.encode(data);
+		return haxe.crypto.Md5.encode(data);
 	}
 	
 	function get_localPath():String {
