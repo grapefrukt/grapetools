@@ -18,6 +18,7 @@ import sys.io.File;
 @:generic class GoogleDocsData<T:{ function new():Void; }> {
 
 	public var data(default, null):Array<T>;
+	public var warnMissingFields:Bool = true;
 	
 	var documentId:String;
 	var gId:String;
@@ -28,6 +29,7 @@ import sys.io.File;
 	var onComplete:Void->Void;
 	
 	var ignoredFields:Map<String, Bool>;
+	
 	/**
 	 * Loads data from a Google Docs spreadsheet. The document needs to be Shared so that "Anyone with the link" can see. 
 	 * @param	documentId	The unique identifier for the document. https://docs.google.com/spreadsheets/d/{THIS_PART}/edit?usp=sharing
@@ -141,7 +143,7 @@ import sys.io.File;
 					try {
 						set(instance, labels[i], cols[i]);
 					} catch (e:Dynamic) {
-						trace('ERROR: failed to set field: ' + labels[i] + ' on ' + instance);
+						if (warnMissingFields) trace('ERROR: failed to set field: ' + labels[i] + ' on ' + instance);
 					}
 				}
 				data.push(instance);
