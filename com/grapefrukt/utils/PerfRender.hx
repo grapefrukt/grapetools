@@ -9,14 +9,15 @@ import openfl.system.System;
  */
 class PerfRender extends Shape {
 	
-	private var categories:Array<String>;
-	private var colors:Array<Int>;
-	private var pixelsPerMS:Float;
-	private var pixelsPerByte:Float = .00005;
-	private var targetFrameTime:Float = 1000 / 60;
-	private var barHeight:Float = 8;
 	
-	private var maxMem:Int = 0;
+	public var pixelsPerMS:Float;
+	public var pixelsPerByte:Float = .00005;
+	public var barHeight:Float = 8;
+	public var categories:Array<String>;
+	public var colors:Array<Int>;
+	public var targetFrameTime:Float = 1000 / 60;
+	
+	var maxMem:Int = 0;
 
 	public function new(categories:Array<String>, pixelsPerMS:Float = 50, ?colors:Array<Int>) {
 		super();
