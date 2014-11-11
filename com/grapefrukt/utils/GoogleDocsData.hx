@@ -18,7 +18,7 @@ import sys.io.File;
 @:generic class GoogleDocsData<T:{ function new():Void; }> {
 
 	public var data(default, null):Array<T>;
-	public var warnMissingFields:Bool = true;
+	public var warnMissingFields:Bool = false;
 	
 	var documentId:String;
 	var gId:String;
