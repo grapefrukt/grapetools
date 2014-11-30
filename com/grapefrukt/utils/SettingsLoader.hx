@@ -58,7 +58,7 @@ class SettingsLoader extends EventDispatcher {
 		dispatchEvent(new Event(Event.COMPLETE));
 	}
 	
-	#if false
+	#if true
 	public function export() {
 		var name = url.substr(url.lastIndexOf("/") + 1);
 		var fields = Type.getClassFields(target);
@@ -77,12 +77,12 @@ class SettingsLoader extends EventDispatcher {
 			var uc = field.toUpperCase();
 			if (uc != field) continue;
 			
-			switch(Type.typeof(Reflect.field(target, field))) {
+			/*switch(Type.typeof(Reflect.field(target, field))) {
 				case ValueType.TFloat : // nothing
 				case ValueType.TInt : // nothing
 				case ValueType.TBool : // nothing
 				default : continue;
-			}
+			}*/
 			
 			var meta = Reflect.field(metadata, field);
 			
