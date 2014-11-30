@@ -97,7 +97,7 @@ class DrawGeometry{
 		innerYRadius:Float, 
 		color:Int = 0xFF0000, 
 		fillAlpha:Float = 1 
-	): Void
+	)
 	{
 		var segAngle:Float;
 		var theta:Float;
@@ -158,6 +158,20 @@ class DrawGeometry{
 			graphics.curveTo(cx, cy, bx, by);
 		}			
 		graphics.endFill();			
+	}
+	
+	static public function drawWedgeSimple(
+		graphics:Graphics, 
+		x:Float, 
+		y:Float, 
+		startAngle:Float, 
+		arc:Float, 
+		outerRadius:Float, 
+		innerRadius:Float, 
+		color:Int = 0xFF0000, 
+		fillAlpha:Float = 1 
+	) {
+		drawWedge(graphics, x, y, startAngle, arc, outerRadius, outerRadius, innerRadius, innerRadius, color, fillAlpha);
 	}
 	
 }
