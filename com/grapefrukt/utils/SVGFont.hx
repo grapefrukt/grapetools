@@ -135,15 +135,13 @@ private class HaxSVGRenderer extends SVGRenderer {
 	}
 	
 	override public function iteratePath(inPath:Path) {
-		if (mFilter!=null && !mFilter(inPath.name,mGroupPath)) return;
+		if (mFilter != null && !mFilter(inPath.name, mGroupPath)) return;
 		if (inPath.segments.length == 0 || mGfx == null) return;
 		
 		var px = 0.0;
 		var py = 0.0;
-
-		var m:Matrix  = inPath.matrix.clone();
-		m.concat(mMatrix);
-		var context = new RenderContext(m, mScaleRect, mScaleW, mScaleH);
+		
+		var context = new RenderContext(mMatrix, mScaleRect, mScaleW, mScaleH);
 
 		mGfx.beginFill(color, 1);
 		
