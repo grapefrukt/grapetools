@@ -48,9 +48,11 @@ class CrashReporter {
 		
 		trace(data);
 		
-		var f = sys.io.File.write('crash_report.txt');
-		f.writeString(data);
-		f.close();
+		#if desktop
+			var f = sys.io.File.write('crash_report.txt');
+			f.writeString(data);
+			f.close();
+		#end
 	}
 	
 	static function printStackItem(itm:StackItem, error:String = '', isFirst:Bool = false) {
