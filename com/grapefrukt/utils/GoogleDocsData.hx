@@ -56,16 +56,10 @@ import sys.io.File;
 	}
 	
 	function loadCached() {
-		#if desktop
-			var loader = new URLLoader();
-			loader.addEventListener(Event.COMPLETE, handleLoadLocalComplete);
-			loader.load(new URLRequest(localPath));
-		#else 
-			var s = flash.net.SharedObject.getLocal(documentId, '/');
-			if (s.data.data == null) return;
-			parse(s.data.data, true);
-			onComplete();
-		#end
+		var data = Assets.getText(localPath);
+		if (data == null) return;
+		parse(data, true);
+		onComplete();
 	}
 	
 	public function loadRemote() {
@@ -161,7 +155,7 @@ import sys.io.File;
 	}
 	
 	function get_localPath():String {
-		return 'cache/' + documentId + '-' + gId + '.csv';
+		return 'cache/$documentId.csv';
 	}
 	
 	function get_remotePath():String {
