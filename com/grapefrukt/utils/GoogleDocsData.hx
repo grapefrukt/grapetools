@@ -56,7 +56,7 @@ import sys.io.File;
 	}
 	
 	function loadCached() {
-		var data = Assets.getText(localPath);
+		var data:String = Assets.getText(localPath);
 		if (data == null) return;
 		parse(data, true);
 		onComplete();
@@ -64,8 +64,7 @@ import sys.io.File;
 	
 	public function loadRemote() {
 		#if (android || flash)
-			parse(Assets.getText('config/' + documentId + '.csv'), false);
-			onComplete();
+			
 		#else
 			var loader = new URLLoader();
 			loader.addEventListener(Event.COMPLETE, handleLoadRemoteComplete);
@@ -79,12 +78,6 @@ import sys.io.File;
 	
 	function handleLoadRemoteError(e:Event) {
 		trace("ERROR: loading remote data failed");
-	}
-	
-	function handleLoadLocalComplete(e:Event) {
-		var loader:URLLoader = cast e.target;
-		parse(loader.data, true);
-		onComplete();
 	}
 	
 	function handleLoadRemoteComplete(e:Event) {
