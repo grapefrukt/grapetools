@@ -11,42 +11,16 @@ package com.grapefrukt.utils.easing;
 	
 class Linear {
 	
-	
-	static public var easeNone (get_easeNone, never):IEasing;
-	
-	
-	private static function get_easeNone ():IEasing {
-		
-		return new LinearEaseNone ();
-		
-	}
-	
-	
-}
-
-
-class LinearEaseNone implements IEasing {
-	
-	
-	public function new () {
-		
-		
-		
-	}
-	
-	
-	public function calculate (k:Float):Float {
-		
+	public static function easeIn(k:Float):Float {
 		return k;
-		
 	}
 	
-	
-	public function ease (t:Float, b:Float, c:Float, d:Float):Float {
-		
-		return c * t / d + b;
-		
+	public static function easeOut(k:Float):Float {
+		return k;
 	}
 	
+	public static function easeInOut(k:Float):Float {
+		return k;
+	}
 	
 }
