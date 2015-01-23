@@ -17,9 +17,12 @@ import openfl.geom.Rectangle;
  * ...
  * @author Martin Jonasson, m@grapefrukt.com
  */
+
+using StringTools;
+ 
 class SVGFont {
 	
-	var glyphs:Map<String, SVGGlyph>;
+	var glyphs:Map<Int, SVGGlyph>;
 	var renderer:HaxSVGRenderer;
 	
 	public var unitsPerEM(default, null):Float;
@@ -60,8 +63,8 @@ class SVGFont {
 					
 					for (glyph in font.elements()) {
 						if (glyph.nodeName != 'glyph') continue;
-						
 						var key = glyph.get('unicode');
+						if (key == null) continue;
 						
 						var horzAdv = Std.parseFloat(glyph.get('horiz-adv-x'));
 						// glyph has no own width data, use the font default
@@ -77,7 +80,7 @@ class SVGFont {
 						}
 						
 						var glyph = new SVGGlyph(horzAdv, path);
-						glyphs.set(key, glyph);
+						glyphs.set(key.fastCodeAt(0), glyph);
 					}
 				}
 			}
@@ -86,30 +89,45 @@ class SVGFont {
 	
 	public function renderString(string:String, graphics:Graphics, fontSize:Float = 16, color:Int = 0x000000, maxWidth:Float = -1) {
 		renderer.reset(this, graphics, fontSize, color);
-		var linebreakAt = [];
+		var linebreakAfter = [];
 		
 		if (maxWidth >= 0) {
-			var width = .0;
-			for (i in 0 ... string.length) {
-				var g = glyphs.get(string.charAt(i));
-				width += renderer.unitsToPx(g.horzAdv);
-				if (width > maxWidth) {
-					linebreakAt.push(i - 1);
-					width = 0;
+			var x = .0;
+			var i = -1;
+			var lastPossibleBreak = -1;
+			// go forward in the string until we exceed the maxWidth
+			while (i++ < string.length) {
+				x += getWidth(string.fastCodeAt(i));
+				if (isBreakable(string.fastCodeAt(i))) lastPossibleBreak = i;
+				
+				// when that happens, start going back again to the first breakable char
+				if (x > maxWidth && lastPossibleBreak >= 0) {
+					trace('exceeded width at char #$i (${string.charAt(i)})');
+					linebreakAfter.push(lastPossibleBreak);
+					lastPossibleBreak = -1;
+					x = 0;
 				}
 			}
-			
-			trace(linebreakAt);
 		}
 		
 		var lineIndex = 0;
 		for (i in 0 ... string.length) {
-			if (linebreakAt.length > 0 && linebreakAt[lineIndex] == i) {
+			renderer.renderGlyph(glyphs.get(string.fastCodeAt(i)));
+			
+			if (linebreakAfter.length > 0 && linebreakAfter[lineIndex] == i) {
 				lineIndex++;
 				renderer.linefeed(lineIndex);
-			}
-			renderer.renderGlyph(glyphs.get(string.charAt(i)));
+			} 
 		}
+	}
+	
+	function getWidth(charCode:Int) {
+		return glyphs.exists(charCode) ? renderer.unitsToPx(glyphs.get(charCode).horzAdv) : 0;
+	}
+	
+	function isBreakable(charCode:Int) {
+		if (charCode == ' '.fastCodeAt(0)) return true;
+		return false;
 	}
 	
 	function makePath(segments:Array<PathSegment>) {
