@@ -84,9 +84,32 @@ class SVGFont {
 		}
 	}
 	
-	public function renderString(string:String, graphics:Graphics, fontSize:Float = 16, color:Int = 0x000000) {
+	public function renderString(string:String, graphics:Graphics, fontSize:Float = 16, color:Int = 0x000000, maxWidth:Float = -1) {
 		renderer.reset(this, graphics, fontSize, color);
-		for (char in string.split('')) renderer.renderGlyph(glyphs.get(char));
+		var linebreakAt = [];
+		
+		if (maxWidth >= 0) {
+			var width = .0;
+			for (i in 0 ... string.length) {
+				var g = glyphs.get(string.charAt(i));
+				width += renderer.unitsToPx(g.horzAdv);
+				if (width > maxWidth) {
+					linebreakAt.push(i - 1);
+					width = 0;
+				}
+			}
+			
+			trace(linebreakAt);
+		}
+		
+		var lineIndex = 0;
+		for (i in 0 ... string.length) {
+			if (linebreakAt.length > 0 && linebreakAt[lineIndex] == i) {
+				lineIndex++;
+				renderer.linefeed(lineIndex);
+			}
+			renderer.renderGlyph(glyphs.get(string.charAt(i)));
+		}
 	}
 	
 	function makePath(segments:Array<PathSegment>) {
@@ -107,6 +130,7 @@ private class HaxSVGRenderer extends SVGRenderer {
 	public function new(graphics:Graphics) {
 		var placeholder = Xml.createElement('xml');
 		placeholder.addChild(Xml.createElement('svg'));
+		mMatrix = new Matrix();
 		super(new SVGData(placeholder));
 	}
 	
@@ -116,13 +140,16 @@ private class HaxSVGRenderer extends SVGRenderer {
 		this.fontSize = fontSize;
 		
 		mGfx = new format.gfx.GfxGraphics(graphics);
-		
+		linefeed();
+	}
+	
+	public function linefeed(lineIndex:Int = 0) {
+		mMatrix.identity();
 		var scale = (1 / font.unitsPerEM) * fontSize;
-		
-		mMatrix = new Matrix();
 		mMatrix.scale(scale, -scale);
 		mMatrix.translate(unitsToPx(font.boundingBox.left), unitsToPx(font.boundingBox.top));
 		mMatrix.translate(unitsToPx(font.pad.left), unitsToPx(font.pad.top));
+		mMatrix.translate(0, -unitsToPx(font.boundingBox.height) * lineIndex);
 	}
 	
 	public function renderGlyph(glyph:SVGGlyph) {
@@ -130,7 +157,7 @@ private class HaxSVGRenderer extends SVGRenderer {
 		mMatrix.translate(unitsToPx(glyph.horzAdv), 0);
 	}
 	
-	function unitsToPx(units:Float) {
+	public function unitsToPx(units:Float) {
 		return (units / font.unitsPerEM) * fontSize;
 	}
 	
