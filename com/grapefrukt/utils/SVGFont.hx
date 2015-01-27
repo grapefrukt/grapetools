@@ -11,6 +11,7 @@ import openfl.display.CapsStyle;
 import openfl.display.Graphics;
 import openfl.display.JointStyle;
 import openfl.geom.Matrix;
+import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
 /**
@@ -131,9 +132,16 @@ class SVGFont {
 		return glyphs.exists(charCode) ? renderer.unitsToPx(glyphs.get(charCode).horzAdv) : 0;
 	}
 	
-	function isBreakable(charCode:Int) {
-		if (charCode == ' '.fastCodeAt(0)) return true;
-		return false;
+	public function getCaretPosition(){
+		return renderer.getCaretPosition();
+	}
+	
+	inline function isBreakable(charCode:Int) {
+		return charCode == ' '.fastCodeAt(0);
+	}
+	
+	inline function isLinebreak(charCode:Int) {
+		return charCode == '\n'.fastCodeAt(0);
 	}
 	
 	function makePath(segments:Array<PathSegment>) {
@@ -205,6 +213,11 @@ private class HaxSVGRenderer extends SVGRenderer {
 
 		mGfx.endFill();
 		mGfx.endLineStyle();
+	}
+	
+	public function getCaretPosition(){
+		var p = new Point(0, 0);
+		return mMatrix.transformPoint(p);
 	}
 }
 
