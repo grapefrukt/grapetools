@@ -95,14 +95,20 @@ class SVGFont {
 			var x = .0;
 			var i = -1;
 			var lastPossibleBreak = -1;
-			// go forward in the string until we exceed the maxWidth
+			// go forward in the string until we exceed the maxWidth or find an explicit linebreak
 			while (i++ < string.length) {
 				x += getWidth(string.fastCodeAt(i));
+				var doBreak = x > maxWidth;
+				
 				if (isBreakable(string.fastCodeAt(i))) lastPossibleBreak = i;
+				if (isLinebreak(string.fastCodeAt(i))) {
+					lastPossibleBreak = i;
+					doBreak = true;
+				}
 				
 				// when that happens, start going back again to the first breakable char
-				if (x > maxWidth && lastPossibleBreak >= 0) {
-					trace('exceeded width at char #$i (${string.charAt(i)})');
+				if (doBreak && lastPossibleBreak >= 0) {
+					//trace('exceeded width at char #$i (${string.charAt(i)})');
 					linebreakAfter.push(lastPossibleBreak);
 					lastPossibleBreak = -1;
 					x = 0;
@@ -171,7 +177,11 @@ private class HaxSVGRenderer extends SVGRenderer {
 	}
 	
 	public function renderGlyph(glyph:SVGGlyph) {
+		// check that glyph exists (linebreaks will trigger this)
+		if (glyph == null) return;
+		// check that the glyph has a path (spaces do not)
 		if (glyph.path != null) iteratePath(glyph.path);
+		// move the "caret"
 		mMatrix.translate(unitsToPx(glyph.horzAdv), 0);
 	}
 	
