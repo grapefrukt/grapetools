@@ -126,6 +126,8 @@ class SVGFont {
 				renderer.linefeed(lineIndex);
 			} 
 		}
+		
+		return lineIndex;
 	}
 	
 	function getWidth(charCode:Int) {
