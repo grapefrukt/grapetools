@@ -1,6 +1,5 @@
 package com.grapefrukt.utils;
-
-import flash.Lib;
+import haxe.Timer;
 
 /**
  * ...
@@ -42,8 +41,8 @@ class Timestep {
 	 * @return	timeDelta
 	 */
 	public function tick():Float {
-		_real_speed = (Lib.getTimer() - _last_frame_time) / targetFrametime;
-		_last_frame_time = Lib.getTimer();
+		_real_speed = (Timer.stamp() * 1000.0 - _last_frame_time) / targetFrametime;
+		_last_frame_time = Timer.stamp() * 1000.0;
 		
 		if (_real_speed > maxSpeed) _real_speed = maxSpeed;
 		
