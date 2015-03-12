@@ -35,6 +35,8 @@ class BuildData {
 	public static inline var REMOTE_OLDER	:Int = 2;
 	public static inline var REMOTE_NEWER	:Int = 3;
 	
+	static inline var TIME_FUZZ:Int = 60 * 1000; // adds a one minute margin of error to build times
+	
 	public static var remoteState(default, null):Int = REMOTE_UNKNOWN;
 	static var onRemoteDataCallback:Int->Void;
 	
@@ -82,14 +84,16 @@ class BuildData {
 			var j = Json.parse(data);
 			var localTimestamp = Date.fromString(timestamp()).getTime();
 			var remoteTimestamp = Date.fromString(j.date).getTime();
+			var diff = localTimestamp - remoteTimestamp;
 			
-			if (localTimestamp < remoteTimestamp) {
-				remoteState = REMOTE_NEWER;
-			} else if (localTimestamp > remoteTimestamp) {
-				remoteState = REMOTE_OLDER;
-			} else if (localTimestamp == remoteTimestamp){
+			if (Math.abs(diff) < TIME_FUZZ) {
 				remoteState = REMOTE_SAME;
+			} else if (diff > 0) {
+				remoteState = REMOTE_OLDER;
+			} else {
+				remoteState = REMOTE_NEWER;
 			}
+			
 		} catch (e:Dynamic) {
 			remoteState = REMOTE_FAIL;
 		}
