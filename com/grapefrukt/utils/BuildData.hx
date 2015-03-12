@@ -29,6 +29,7 @@ class BuildData {
 	static public inline var platform:String = 'unknown';
 	#end
 	
+	public static inline var REMOTE_FAIL	:Int = -1;
 	public static inline var REMOTE_UNKNOWN	:Int = 0;
 	public static inline var REMOTE_SAME	:Int = 1;
 	public static inline var REMOTE_OLDER	:Int = 2;
@@ -72,7 +73,7 @@ class BuildData {
 		url = url.replace("$platform", platform);
 		var http:Http = new Http(url);
 		http.onData = onData;
-		http.onError = log;
+		http.onError = onError;
 		http.request();
 	}
 	
@@ -90,14 +91,14 @@ class BuildData {
 				remoteState = REMOTE_SAME;
 			}
 		} catch (e:Dynamic) {
-			
+			remoteState = REMOTE_FAIL;
 		}
 		
 		onRemoteDataCallback(remoteState);
 	}
 	
-	static function log(str:String) {
-		//trace(str);
+	static function onError(str:String) {
+		remoteState = REMOTE_FAIL;
 		onRemoteDataCallback(remoteState);
 	}
 	
