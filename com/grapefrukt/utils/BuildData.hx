@@ -29,6 +29,9 @@ class BuildData {
 	static public inline var platform:String = 'unknown';
 	#end
 	
+	static public var tag(default, null):String = _macro_tag();
+	static public var timestamp(default, null):String = _macro_timestamp();
+	
 	public static inline var REMOTE_FAIL	:Int = -1;
 	public static inline var REMOTE_UNKNOWN	:Int = 0;
 	public static inline var REMOTE_SAME	:Int = 1;
@@ -40,12 +43,12 @@ class BuildData {
 	public static var remoteState(default, null):Int = REMOTE_UNKNOWN;
 	static var onRemoteDataCallback:Int->Void;
 	
-	macro static public function timestamp() {
+	macro static function _macro_timestamp() {
 		var now_str = Date.now().toString();
 		return macro $v { now_str };
 	}
 	
-	macro static public function tag() {
+	macro static function _macro_tag() {
 		var process = new sys.io.Process('git', ['describe', '--tags', '--always']);
 		var output = '';
 		
@@ -64,7 +67,7 @@ class BuildData {
 	
 	macro static public function export() {
 		var f = sys.io.File.write('build.json');
-		f.writeString('{ "date" : "${timestamp()}", "tag" : "${tag()}" }');
+		f.writeString('{ "date" : "$timestamp", "tag" : "$tag" }');
 		f.close();
 		
 		return macro null;
@@ -82,7 +85,7 @@ class BuildData {
 	static function onData(data:String) {
 		try {
 			var j = Json.parse(data);
-			var localTimestamp = Date.fromString(timestamp()).getTime();
+			var localTimestamp = Date.fromString(timestamp).getTime();
 			var remoteTimestamp = Date.fromString(j.date).getTime();
 			var diff = localTimestamp - remoteTimestamp;
 			
