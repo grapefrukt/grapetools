@@ -45,10 +45,12 @@ class SettingsLoader extends EventDispatcher {
 	}
 	
 	private function handleSecurityError(e:SecurityErrorEvent):Void {
+		trace("security error loading settings: " + e.text);
 		dispatchEvent(new ErrorEvent(ErrorEvent.ERROR, false, false, "security error loading settings: " + e.text));
 	}
 	
 	private function handleIOError(e:IOErrorEvent):Void {
+		trace("io error loading settings: " + e.text);
 		dispatchEvent(new ErrorEvent(ErrorEvent.ERROR, false, false, "io error loading settings: " + e.text));
 	}
 
