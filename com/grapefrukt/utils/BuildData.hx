@@ -42,6 +42,7 @@ class BuildData {
 	
 	public static var remoteState(default, null):Int = REMOTE_UNKNOWN;
 	static var onRemoteDataCallback:Int->Void;
+	static var url:String;
 	
 	macro static function _macro_timestamp() {
 		var now_str = Date.now().toString();
@@ -75,11 +76,20 @@ class BuildData {
 	
 	static public function check(url:String, onRemoteDataCallback:Int->Void) {
 		BuildData.onRemoteDataCallback = onRemoteDataCallback;
-		url = url.replace("$platform", platform);
+		BuildData.url = url.replace("$platform", platform);
+		
+		#if cpp
+			cpp.vm.Thread.create(request);
+		#else
+			request();
+		#end
+	}
+	
+	static function request() {
 		var http:Http = new Http(url);
 		http.onData = onData;
 		http.onError = onError;
-		http.request();
+		http.request();	
 	}
 	
 	static function onData(data:String) {
