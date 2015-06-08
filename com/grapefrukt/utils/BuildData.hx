@@ -4,6 +4,11 @@ import haxe.Json;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+#if macro
+import sys.io.File;
+import sys.io.Process;
+#end
+
 /**
  * ...
  * @author Martin Jonasson, m@grapefrukt.com
@@ -50,7 +55,7 @@ class BuildData {
 	}
 	
 	macro static function _macro_tag() {
-		var process = new sys.io.Process('git', ['describe', '--tags', '--always']);
+		var process = new Process('git', ['describe', '--tags', '--always']);
 		var output = '';
 		
 		// try to read the stdout, this crashes if there's nothing to read, hence the try/catch
@@ -66,9 +71,25 @@ class BuildData {
 		return macro $v { output };
 	}
 	
-	macro static public function export() {
-		var f = sys.io.File.write('build.json');
-		f.writeString('{ "date" : "$timestamp", "tag" : "$tag" }');
+	macro static public function export(data:Map<String, String> = null) {
+		if (data == null) data = new Map();
+		
+		// reads in build data generated earlier in the build
+		try {
+			var f = File.read('build.json');
+			var s = f.readLine();
+			var d = Json.parse(s);
+			for (field in Reflect.fields(d)) data.set(field, Reflect.field(d, field));
+			f.close();
+		} catch (e:Dynamic) {
+			// no build.json was present or parsing failed
+		}
+		
+		data.set('date', timestamp);
+		data.set('tag', tag);
+		
+		var f = File.write('build.json');
+		f.writeString(Json.stringify(data));
 		f.close();
 		
 		return macro null;
