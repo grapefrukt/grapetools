@@ -33,7 +33,7 @@ class CrashReporter {
 	static function onErrorEvent(e:UncaughtErrorEvent) {
 		var error = e.error;
 		var time = Date.now().toString();
-		var data = '${e.error}\n$time\n';
+		var data = '${e.error}\n$time\nBuilt on: ${BuildData.timestamp}\nGit tag: ${BuildData.tag}';
 		
 		var stack:Array<StackItem> = CallStack.exceptionStack();
 		stack.reverse();
@@ -64,7 +64,7 @@ class CrashReporter {
 				str = 'module $m';
 			case FilePos(itm,file,line):
 				if (itm == null) return '';
-				if (isFirst ) str += '$pathPrefix/$file:$line:$error';
+				if (isFirst ) str += '$pathPrefix/$file:$line: characters 0-1 : $error';
 				else str += '\t$pathPrefix/$file:$line';
 				//str += printStackItem(itm);
 			case Method(cname,meth):
