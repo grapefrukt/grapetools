@@ -89,7 +89,7 @@ class BuildData {
 		data.set('tag', tag);
 		
 		var f = File.write('build.json');
-		f.writeString(Json.stringify(data));
+		f.writeString(Json.stringify(data, null, '\t'));
 		f.close();
 		
 		return macro null;
