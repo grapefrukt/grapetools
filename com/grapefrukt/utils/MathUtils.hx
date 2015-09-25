@@ -23,6 +23,17 @@ class MathUtils {
 		return value;
 	}
 	
+	/**
+	 * Takes a value and wraps it so that 0-1 increases normally, 1-2 equals 1-0, anything above that wraps
+	 * Useful for tweening a parameter to a value and back again without two separate tweens
+	 * @param	value
+	 */
+	public static function zigzag(value:Float) {
+		value = Math.abs(value) % 2;
+		if (value > 1) return 2 - value;
+		return value;
+	}
+	
 	// http://stackoverflow.com/a/1581007
 	public static function roundToSignificant(value:Float, digits:Int = 2) {
 		if (value == 0) return .0;
