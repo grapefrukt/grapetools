@@ -33,7 +33,7 @@ class CrashReporter {
 	static function onErrorEvent(e:UncaughtErrorEvent) {
 		var error = e.error;
 		var time = Date.now().toString();
-		var data = '${e.error}\n$time\nBuilt on: ${BuildData.timestamp}\nGit tag: ${BuildData.tag}';
+		var data = '${e.error}\n$time\nBuilt on: ${BuildData.timestamp}\nGit tag: ${BuildData.tag}\n\n';
 		
 		var stack:Array<StackItem> = CallStack.exceptionStack();
 		stack.reverse();
