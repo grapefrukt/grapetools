@@ -49,9 +49,9 @@ class Cooldown {
 		if (cooldown > 0 && cooldown - timeDelta <= 0) {
 			//dispatchEvent(new CooldownEvent(CooldownEvent.COMPLETE, this));
 			if (_onComplete != null) _onComplete();
-			if (autoReset) reset();
 		}
 		cooldown -= timeDelta;
+		if (cooldown < 0 && autoReset) reset();
 	}
 	
 	/**
